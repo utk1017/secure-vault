@@ -1,0 +1,16 @@
+# Arduino / PlatformIO
+.pio/
+.vscode/
+*.o
+*.elf
+*.bin
+*.hex
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets - never commit Wi-Fi/RainMaker credentials
+secrets.h
+credentials.h
