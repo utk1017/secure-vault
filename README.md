@@ -1,26 +1,30 @@
 # IoT & Embedded System Based Secure Vault
 
-A smart, ESP32-powered vault that upgrades a traditional keypad locker with anti-tamper detection, remote lock/unlock via **ESP RainMaker**, and real-time push notifications , all running on a non-blocking finite-state-machine firmware.
+A smart, ESP32-powered vault that upgrades a traditional keypad locker with anti-tamper detection, remote lock/unlock via **ESP RainMaker**, and real-time push notifications — all running on a non-blocking finite-state-machine firmware.
 
+Built during a summer training program at **Uptech Automation**, under the guidance of **Mr. Armaan Hussain**, by **Utkarsh Gupta** (Team "ECE TECH") — Department of ECE, Bharati Vidyapeeth's College of Engineering, New Delhi.
 
+<p align="center">
+  <img src="docs/images/fig4.1_prototype_front_view.jpg" alt="Completed Secure Vault Prototype" width="420">
+</p>
 
 ---
 
-## Features
+## ✨ Features
 
-- **4-digit PIN authentication** : via a 4x4 matrix keypad (`*` clears, `#` submits), with a 30-second lockout after 3 wrong attempts (brute-force protection).
-- **Remote lock/unlock** : through the ESP RainMaker mobile app  but only when the vault is explicitly waiting in *Phone/RainMaker Mode* (selected with `A` on the keypad menu). Remote commands received in any other state are dropped, so a stray cloud command can never silently unlock the vault.
-- **Anti-tamper detection** : using an SW-420 vibration sensor: instead of reacting to a single vibration pulse, the firmware requires **11 HIGH readings inside a rolling 1.5-second window** : before declaring an intrusion , this filters out light knocks/accidental touches while still catching sustained forced-entry attempts.
-- **Instant alerts** : on tamper detection: continuous buzzer, red LED blinking every 150 ms, LCD "INTRUDER!" message, and a RainMaker push notification.
-- **User presence detection** : via an HC-SR04 ultrasonic sensor ,the vault wakes from idle and shows a welcome/menu screen when someone approaches within ~50 cm.
-- **Live LCD status display** (16x2 I2C) : Ready, Welcome User, menu, Password entry, Access Granted, Wrong Password + attempts left, lockout countdown, Vault Open/Locked, Cancelled, INTRUDER!.
-- **Non-blocking state-machine firmware** : no blocking `while(true)` loops; the reset button, RainMaker commands, and vibration monitoring are checked on **every** loop pass regardless of which screen is active.
-- **Manual re-locking** : the vault does not auto re-lock on a timer; press `C` (or send a remote lock command) to secure it again.
+- **4-digit PIN authentication** via a 4x4 matrix keypad (`*` clears, `#` submits), with a 30-second lockout after 3 wrong attempts (brute-force protection).
+- **Remote lock/unlock** through the ESP RainMaker mobile app — but only when the vault is explicitly waiting in *Phone/RainMaker Mode* (selected with `A` on the keypad menu). Remote commands received in any other state are dropped, so a stray cloud command can never silently unlock the vault.
+- **Anti-tamper detection** using an SW-420 vibration sensor: instead of reacting to a single vibration pulse, the firmware requires **11 HIGH readings inside a rolling 1.5-second window** before declaring an intrusion — this filters out light knocks/accidental touches while still catching sustained forced-entry attempts.
+- **Instant alerts** on tamper detection: continuous buzzer, red LED blinking every 150 ms, LCD "INTRUDER!" message, and a RainMaker push notification.
+- **User presence detection** via an HC-SR04 ultrasonic sensor — the vault wakes from idle and shows a welcome/menu screen when someone approaches within ~50 cm.
+- **Live LCD status display** (16x2 I2C) — Ready, Welcome User, menu, Password entry, Access Granted, Wrong Password + attempts left, lockout countdown, Vault Open/Locked, Cancelled, INTRUDER!.
+- **Non-blocking state-machine firmware** — no blocking `while(true)` loops; the reset button, RainMaker commands, and vibration monitoring are checked on **every** loop pass regardless of which screen is active.
+- **Manual re-locking** — the vault does not auto re-lock on a timer; press `C` (or send a remote lock command) to secure it again.
 - **Power-stability fix**: a 3300µF/16V decoupling capacitor across the main rail eliminates brownout resets caused by the servo's current spike on unlock, with the ESP32's hardware brownout detector also disabled at boot as a backstop.
 
 ---
 
-##  Hardware Components
+## 🧰 Hardware Components
 
 | Component | Spec | Function |
 |---|---|---|
@@ -33,9 +37,22 @@ A smart, ESP32-powered vault that upgrades a traditional keypad locker with anti
 | Buzzer | 5V active | Audible alerts |
 | Decoupling Capacitor | 3300µF, 16V electrolytic | Power rail stabilization for servo |
 
+<p align="center">
+  <img src="docs/images/fig3.1_esp32_dev_board.jpg" alt="ESP32 Dev Board" width="150">
+  <img src="docs/images/fig3.2_4x4_matrix_keypad.jpg" alt="4x4 Matrix Keypad" width="150">
+  <img src="docs/images/fig3.3_16x2_i2c_lcd.jpg" alt="16x2 I2C LCD" width="150">
+  <img src="docs/images/fig3.4_sg90_servo_motor.jpg" alt="SG90 Servo Motor" width="150">
+</p>
+<p align="center">
+  <img src="docs/images/fig3.5_hcsr04_ultrasonic_sensor.jpg" alt="HC-SR04 Ultrasonic Sensor" width="150">
+  <img src="docs/images/fig3.6_sw420_vibration_sensor.jpg" alt="SW-420 Vibration Sensor" width="150">
+  <img src="docs/images/fig3.7_buzzer_module.jpg" alt="Buzzer Module" width="150">
+  <img src="docs/images/fig3.8_3300uf_16v_capacitor.jpg" alt="3300uF 16V Capacitor" width="150">
+</p>
+
 Full details in [`docs/hardware.md`](docs/hardware.md).
 
-## Pin Configuration
+## 🔌 Pin Configuration
 
 | Signal | ESP32 GPIO | Mode |
 |---|---|---|
@@ -52,7 +69,7 @@ Full details in [`docs/hardware.md`](docs/hardware.md).
 | Keypad Rows | GPIO 23, 17, 32, 33 | Scanned output |
 | Keypad Columns | GPIO 25, 26, 27, 14 | Scanned input |
 
-## Key Controls
+## ⌨️ Key Controls
 
 | Key | Action |
 |---|---|
@@ -66,20 +83,40 @@ Full details in [`docs/hardware.md`](docs/hardware.md).
 
 ---
 
-## How It Works
+## 🧠 How It Works
 
 The vault is idle by default, using the ultrasonic sensor to detect an approaching user. Once detected, it shows a menu to pick **Keypad Mode (`B`)** or **Phone/RainMaker Mode (`A`)**:
 
 - **Keypad Mode** → enter a 4-digit PIN, `#` to submit. Correct PIN unlocks the servo and stays unlocked until `C` is pressed. Wrong PIN increments an attempt counter; 3 wrong attempts trigger a 30-second lockout.
-- **Phone Mode** → the vault waits for a RainMaker command. Commands received *outside* this exact state are ignored , a deliberate security boundary so the app can never override the lock without the user first selecting this mode on the physical keypad.
+- **Phone Mode** → the vault waits for a RainMaker command. Commands received *outside* this exact state are ignored — a deliberate security boundary so the app can never override the lock without the user first selecting this mode on the physical keypad.
 
-In parallel, on **every single loop iteration**, the firmware checks the reset button, any pending RainMaker command, and the vibration sensor  regardless of which of the above screens is active. If 11 vibration hits land inside a 1.5-second window, the vault immediately alarms: continuous buzzer + blinking red LED + LCD warning + push notification, until cleared via `D` or a remote silence command, followed by a 3-second cooldown to prevent re-triggering on residual vibration.
+In parallel, on **every single loop iteration**, the firmware checks the reset button, any pending RainMaker command, and the vibration sensor — regardless of which of the above screens is active. If 11 vibration hits land inside a 1.5-second window, the vault immediately alarms: continuous buzzer + blinking red LED + LCD warning + push notification, until cleared via `D` or a remote silence command, followed by a 3-second cooldown to prevent re-triggering on residual vibration.
+
+<p align="center">
+  <img src="docs/circuit/fig3.9_initial_system_schematic.jpg" alt="Initial System Schematic" width="480">
+  <img src="docs/circuit/fig3.10_final_pcb_layout.jpg" alt="Final PCB Layout" width="380">
+</p>
+<p align="center"><em>Left: initial system schematic. Right: final PCB layout.</em></p>
 
 See [`docs/architecture.md`](docs/architecture.md) for the full state diagram, RainMaker device setup, and design evolution (initial blocking implementation → final non-blocking FSM).
 
 ---
 
-## Repository Structure
+## 📷 Completed Prototype
+
+<p align="center">
+  <img src="docs/images/fig4.2a_internal_wiring_pcb_top.jpg" alt="Internal Wiring - PCB" width="280">
+  <img src="docs/images/fig4.2b_internal_wiring_full.jpg" alt="Internal Wiring - Full" width="380">
+</p>
+
+<p align="center">
+  <img src="docs/images/fig4.3_rainmaker_app_interface.jpg" alt="ESP RainMaker App Interface" width="220">
+</p>
+<p align="center"><em>ESP RainMaker mobile app — Vault Lock, Intruder Alert, and Vault Notifications devices.</em></p>
+
+---
+
+## 📁 Repository Structure
 
 ```
 secure-vault/
@@ -90,7 +127,7 @@ secure-vault/
 │   ├── hardware.md             # Component details & wiring notes
 │   ├── architecture.md         # FSM design, mode-wise flow, RainMaker setup
 │   ├── testing.md              # Functional test scenarios & results
-│   ├── images/                 # Photos of the completed prototype
+│   ├── images/                 # Component & prototype photos
 │   └── circuit/                # Schematic / PCB layout images
 ├── report/
 │   └── Utkarsh_SummerTrainingReport.pdf
@@ -100,7 +137,7 @@ secure-vault/
 
 ---
 
-##  Getting Started
+## 🚀 Getting Started
 
 ### Requirements
 - [Arduino IDE](https://www.arduino.cc/en/software) (2.x recommended)
@@ -109,7 +146,7 @@ secure-vault/
   - `Keypad`
   - `LiquidCrystal_I2C`
   - `ESP32Servo`
-  - ESP RainMaker Arduino core (`RMaker.h`, `WiFiProv.h`) : installed alongside the ESP32 board package or from [Espressif's RainMaker Arduino repo](https://github.com/espressif/arduino-esp-rainmaker)
+  - ESP RainMaker Arduino core (`RMaker.h`, `WiFiProv.h`) — installed alongside the ESP32 board package or from [Espressif's RainMaker Arduino repo](https://github.com/espressif/arduino-esp-rainmaker)
 
 ### Flashing
 1. Open `firmware/SecureVault/SecureVault.ino` in the Arduino IDE.
@@ -119,14 +156,14 @@ secure-vault/
    - `pop` (BLE provisioning proof-of-possession, currently `"QWERTYUI"`)
    - Consider moving both out of the `.ino` into a git-ignored `secrets.h` (see `.gitignore`) rather than committing them in plaintext.
 4. Upload.
-5. Provision the device to Wi-Fi using the ESP RainMaker app to scan the QR code printed to Serial on first boot (BLE, service name `MEE`).
+5. Provision the device to Wi-Fi using the ESP RainMaker app — scan the QR code printed to Serial on first boot (BLE, service name `MEE`).
 
 ### Wiring
-Refer to the pin table above and `docs/hardware.md`. **Do not skip the 3300µF/16V capacitor across the servo's power rail** , without it, expect intermittent brownout resets when the servo actuates, even with the software brownout-detector override in place.
+Refer to the pin table above and `docs/hardware.md`. **Do not skip the 3300µF/16V capacitor across the servo's power rail** — without it, expect intermittent brownout resets when the servo actuates, even with the software brownout-detector override in place.
 
 ---
 
-## Testing Summary
+## 🧪 Testing Summary
 
 | Scenario | Result |
 |---|---|
@@ -143,7 +180,7 @@ Full results in [`docs/testing.md`](docs/testing.md).
 
 ---
 
-## Future Enhancements
+## 🔭 Future Enhancements
 
 - Time-stamped access history log (synced to RainMaker/cloud)
 - ESP32-CAM integration for capturing images on tamper events
@@ -156,8 +193,12 @@ Full results in [`docs/testing.md`](docs/testing.md).
 
 ---
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License : see [LICENSE](LICENSE).
+This project is licensed under the MIT License — see [LICENSE](LICENSE).
 
+## 🙌 Acknowledgements
 
+- **Mr. Armaan Hussain** — Mentor, Uptech Automation
+- **Mrs. Kusum Tharani** — HOD, Dept. of Electrical & Electronics Engineering
+- Team **"ECE TECH"**, Bharati Vidyapeeth's College of Engineering, New Delhi
