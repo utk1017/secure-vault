@@ -1,6 +1,6 @@
 # IoT & Embedded System Based Secure Vault
 
-A smart, ESP32-powered vault that upgrades a traditional keypad locker with anti-tamper detection, remote lock/unlock via **ESP RainMaker**, and real-time push notifications — all running on a non-blocking finite-state-machine firmware.
+A smart, ESP32-powered vault that upgrades a traditional keypad locker with anti-tamper detection, remote lock/unlock via **ESP RainMaker**, and real-time push notifications , all running on a non-blocking finite-state-machine firmware.
 
 
 <p align="center">
@@ -87,7 +87,7 @@ Full details in [`docs/hardware.md`](docs/hardware.md).
 The vault is idle by default, using the ultrasonic sensor to detect an approaching user. Once detected, it shows a menu to pick **Keypad Mode (`B`)** or **Phone/RainMaker Mode (`A`)**:
 
 - **Keypad Mode** → enter a 4-digit PIN, `#` to submit. Correct PIN unlocks the servo and stays unlocked until `C` is pressed. Wrong PIN increments an attempt counter; 3 wrong attempts trigger a 30-second lockout.
-- **Phone Mode** → the vault waits for a RainMaker command. Commands received *outside* this exact state are ignored — a deliberate security boundary so the app can never override the lock without the user first selecting this mode on the physical keypad.
+- **Phone Mode** → the vault waits for a RainMaker command. Commands received *outside* this exact state are ignored , a deliberate security boundary so the app can never override the lock without the user first selecting this mode on the physical keypad.
 
 In parallel, on **every single loop iteration**, the firmware checks the reset button, any pending RainMaker command, and the vibration sensor regardless of which of the above screens is active. If 11 vibration hits land inside a 1.5-second window, the vault immediately alarms: continuous buzzer + blinking red LED + LCD warning + push notification, until cleared via `D` or a remote silence command, followed by a 3-second cooldown to prevent re-triggering on residual vibration.
 
@@ -115,7 +115,7 @@ See [`docs/architecture.md`](docs/architecture.md) for the full state diagram, R
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 secure-vault/
@@ -162,7 +162,7 @@ Refer to the pin table above and `docs/hardware.md`. **Do not skip the 3300µF/1
 
 ---
 
-## 🧪 Testing Summary
+## Testing Summary
 
 | Scenario | Result |
 |---|---|
@@ -179,7 +179,7 @@ Full results in [`docs/testing.md`](docs/testing.md).
 
 ---
 
-## 🔭 Future Enhancements
+## Future Enhancements
 
 - Time-stamped access history log (synced to RainMaker/cloud)
 - ESP32-CAM integration for capturing images on tamper events
@@ -192,7 +192,7 @@ Full results in [`docs/testing.md`](docs/testing.md).
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License : see [LICENSE](LICENSE).
 
